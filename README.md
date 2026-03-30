@@ -1,1 +1,1 @@
-# odin-trqp-cc
+# odin-trqp-sc
