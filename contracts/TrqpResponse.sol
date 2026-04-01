@@ -3,11 +3,33 @@ pragma solidity ^0.8.0;
 
 import "./AuthorityStatement.sol";
 
+struct SigningRequestEntry {
+    string alg;
+    string kid;
+    string serializedPayload;
+    string payload;
+    string purpose;
+    string nonce;
+}
+
+struct DidAuthChallenge {
+    string jobId;
+    string state;
+    string action;
+    SigningRequestEntry signingRequest;
+}
+
 struct TrqpResponse {
     string statusCode;
     string status;
     string description;
     AuthorityStatement[] statements;
+
+    // Optional fields mirrored from Fabric TRQP envelope.
+    // Solidity does not have native JSON/object maps, so these are represented as JSON strings.
+    string operationResultJson;
+    DidAuthChallenge didAuth;
+    string signingRequestJson;
 }
 
 string constant TRQP_OK = "TRQP-0";
