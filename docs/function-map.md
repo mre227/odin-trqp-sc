@@ -9,6 +9,7 @@
 | MigrateTrustRegistry   | migrateTrustRegistry()  |
 | CreateStatement        | createStatement()       |
 | SignStatement          | signStatement()         |
+| GetSigningMaterial     | getSigningMaterial()    |
 | UpdateStatement        | updateStatement()       |
 | GetStatement           | getStatement()          |
 | SearchStatement        | searchStatement()       |

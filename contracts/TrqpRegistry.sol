@@ -20,6 +20,8 @@ contract TrqpRegistry {
 
     function signStatement() external returns (TrqpResponse memory) {}
 
+    function getSigningMaterial() external returns (TrqpResponse memory) {}
+
     function updateStatement() external returns (TrqpResponse memory) {}
 
     function getStatement() external returns (TrqpResponse memory) {}
