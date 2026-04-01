@@ -1,3 +1,5 @@
+const { ethers } = require("hardhat");
+
 async function main() {
   const TrqpRegistry = await ethers.getContractFactory("TrqpRegistry");
   const registry = await TrqpRegistry.deploy();
