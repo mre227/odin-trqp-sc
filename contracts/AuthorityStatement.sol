@@ -1,6 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+struct DataIntegrityProof {
+    string proofType;
+    string cryptosuite;
+    string verificationMethod;
+    string proofPurpose;
+    uint256 created;
+    string domain;
+    string challenge;
+    string proofValue;
+}
+
+struct ContextEntry {
+    string message;
+    uint256 updated;
+    AuthStmtStatus status;
+    DataIntegrityProof proof;
+}
+
 struct AuthorityContext {
     string ecosystemId;
     string trustRegistryId;
@@ -17,6 +35,7 @@ struct AuthorityStatement {
     uint256 updated;
     uint256 expires;
     AuthStmtStatus status;
+    DataIntegrityProof proof;
     AuthorityContext context;
 }
 
@@ -33,10 +52,4 @@ enum AuthStmtStatus {
     Started,
     Active,
     Revoked
-}
-
-struct ContextEntry {
-    string message;
-    uint256 updated;
-    AuthStmtStatus status;
 }
