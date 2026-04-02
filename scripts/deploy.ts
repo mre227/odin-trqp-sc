@@ -1,3 +1,4 @@
+// this script deploys the TrqpRegistry smart contract and prints its address
 const { ethers } = require("hardhat");
 
 async function main() {
