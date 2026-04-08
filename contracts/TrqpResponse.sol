@@ -22,21 +22,27 @@ struct DidAuthChallenge {
 }
 
 // standard response envelope returned by all trqp functions
-struct TrqpResponse {
+struct TRQPResponse {
     string statusCode;
     string status;
     string description;
     AuthorityStatement[] statements;
-    string operationResultJson;
+    string operationResult;
     DidAuthChallenge didAuth;
-    string signingRequestJson;
+    string signingRequest;
 }
 
 // trqp status codes
-string constant TRQP_OK = "TRQP-0";
-string constant TRQP_ERROR = "TRQP-100";
-string constant TRQP_NOT_FOUND = "TRQP-200";
-string constant TRQP_INVALID_REQUEST = "TRQP-300";
+string constant TRQP_0 = "TRQP-0";
+string constant TRQP_100 = "TRQP-100";
+string constant TRQP_200 = "TRQP-200";
+string constant TRQP_300 = "TRQP-300";
+
+// legacy aliases (kept for compatibility)
+string constant TRQP_OK = TRQP_0;
+string constant TRQP_ERROR = TRQP_100;
+string constant TRQP_NOT_FOUND = TRQP_200;
+string constant TRQP_INVALID_REQUEST = TRQP_300;
 
 // action success codes
 string constant AS_1 = "AS-1"; // authorized

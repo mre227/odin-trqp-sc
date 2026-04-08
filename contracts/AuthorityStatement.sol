@@ -43,11 +43,11 @@ struct AuthorityStatement {
     AuthorityContext context;
 }
 
-// the different type of authority a statement can grant 
+// the different type of authority a statement can grant
 enum ActionType {
     Authorization,
     Delegation,
-    Issue,
+    Issuance,
     Ecosystem,
     EcosystemGovernanceAuthority,
     TrustRegistry
@@ -56,6 +56,12 @@ enum ActionType {
 // the possible states of an authority statement during its lifecycle
 enum AuthStmtStatus {
     Started,
+    Active,
+    Revoked
+}
+
+// narrowed status enumeration used by the migration tests
+enum StatementStatus {
     Active,
     Revoked
 }
