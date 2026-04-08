@@ -11,21 +11,21 @@ contract TrqpRegistry {
     bool private initialized; // initialized or not
 
     // sets up three initial governane statements 
-    function initialize(BootstrapInput calldata input) external returns (TrqpResponse memory) {
+    function initialize(BootstrapInput calldata input) external returns (TRQPResponse memory) {
         SigningRequestEntry memory emptySR;
         DidAuthChallenge memory emptyDidAuth;
         emptyDidAuth.signingRequest = emptySR;
 
         // prevent re-initialization
         if (initialized) {
-            return TrqpResponse({
-                statusCode: TRQP_INVALID_REQUEST,
+            return TRQPResponse({
+                statusCode: TRQP_300,
                 status: "invalidrequest",
                 description: "already initialized",
                 statements: new AuthorityStatement[](0),
-                operationResultJson: "",
+                operationResult: "",
                 didAuth: emptyDidAuth,
-                signingRequestJson: ""
+                signingRequest: ""
             });
         }
 
@@ -84,36 +84,36 @@ contract TrqpRegistry {
         initialized = true;
         emptyDidAuth.signingRequest = emptySR;
 
-        return TrqpResponse({
-            statusCode: TRQP_OK,
+        return TRQPResponse({
+            statusCode: TRQP_0,
             status: "started",
             description: "bootstrap initialized",
             statements: new AuthorityStatement[](0),
-            operationResultJson: "",
+            operationResult: "",
             didAuth: emptyDidAuth,
-            signingRequestJson: ""
+            signingRequest: ""
         });
     }
 
-    function finishBootstrap() external returns (TrqpResponse memory) {}
+    function finishBootstrap() external returns (TRQPResponse memory) {}
 
-    function migrateEcosystem() external returns (TrqpResponse memory) {}
+    function migrateEcosystem() external returns (TRQPResponse memory) {}
 
-    function migrateEga() external returns (TrqpResponse memory) {}
+    function migrateEga() external returns (TRQPResponse memory) {}
 
-    function migrateTrustRegistry() external returns (TrqpResponse memory) {}
+    function migrateTrustRegistry() external returns (TRQPResponse memory) {}
 
-    function createStatement() external returns (TrqpResponse memory) {}
+    function createStatement() external returns (TRQPResponse memory) {}
 
-    function signStatement() external returns (TrqpResponse memory) {}
+    function signStatement() external returns (TRQPResponse memory) {}
 
-    function getSigningMaterial() external returns (TrqpResponse memory) {}
+    function getSigningMaterial() external returns (TRQPResponse memory) {}
 
-    function updateStatement() external returns (TrqpResponse memory) {}
+    function updateStatement() external returns (TRQPResponse memory) {}
 
-    function getStatement() external returns (TrqpResponse memory) {}
+    function getStatement() external returns (TRQPResponse memory) {}
 
-    function searchStatement() external returns (TrqpResponse memory) {}
+    function searchStatement() external returns (TRQPResponse memory) {}
 
-    function evaluateStatement() external returns (TrqpResponse memory) {}
+    function evaluateStatement() external returns (TRQPResponse memory) {}
 }
