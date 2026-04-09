@@ -125,6 +125,7 @@ describe("updateStatement revocation", function () {
     );
 
     const result = await registry.connect(issuer).callStatic.updateStatement();
+    await registry.connect(issuer).updateStatement();
     expect(result.statusCode).to.equal("TRQP-0");
 
     const statusSlot = ethers.utils.hexZeroPad(
@@ -238,6 +239,7 @@ describe("updateStatement revocation", function () {
     );
 
     const result = await registry.connect(issuer).callStatic.updateStatement();
+    await registry.connect(issuer).updateStatement();
     expect(result.statusCode).to.equal("TRQP-0");
 
     const childStatusSlot = ethers.utils.hexZeroPad(
