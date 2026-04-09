@@ -3,6 +3,21 @@ pragma solidity ^0.8.0;
 
 import "./AuthorityStatement.sol";
 
+// response-friendly statement shape; small integer timestamps decode as JS numbers in tests
+struct AuthorityStatementResponse {
+    string id;
+    string authorityId;
+    string entityId;
+    ActionType action;
+    string[] resources;
+    uint48 created;
+    uint48 updated;
+    uint48 expires;
+    AuthStmtStatus status;
+    DataIntegrityProof proof;
+    AuthorityContext context;
+}
+
 // represents a single signing request entry returned during DID creation
 struct SigningRequestEntry {
     string alg;
@@ -26,7 +41,7 @@ struct TRQPResponse {
     string statusCode;
     string status;
     string description;
-    AuthorityStatement[] statements;
+    AuthorityStatementResponse[] statements;
     string operationResult;
     DidAuthChallenge didAuth;
     string signingRequest;
