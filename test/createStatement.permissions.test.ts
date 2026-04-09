@@ -2,6 +2,10 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 const MAPPING_SLOT = 0;
+const PENDING_CREATE_AUTHORITY_SLOT = 3;
+const PENDING_CREATE_SCHEMA_SLOT = 4;
+const PENDING_CREATE_ACTION_SLOT = 5;
+const SCHEMA_ISSUER_MAPPING_SLOT = 6;
 const ACTION_AUTHORIZATION = 0;
 const ACTION_DELEGATION = 1;
 const ACTION_ISSUANCE = 2;
@@ -90,6 +94,45 @@ async function seedStatement(
   );
 }
 
+async function setPendingCreate(
+  contractAddress: string,
+  authorityId: string,
+  schemaId: string,
+  action: number
+): Promise<void> {
+  const authoritySlot = ethers.utils.hexZeroPad(
+    ethers.utils.hexlify(PENDING_CREATE_AUTHORITY_SLOT),
+    32
+  );
+  const schemaSlot = ethers.utils.hexZeroPad(
+    ethers.utils.hexlify(PENDING_CREATE_SCHEMA_SLOT),
+    32
+  );
+  const actionSlot = ethers.utils.hexZeroPad(
+    ethers.utils.hexlify(PENDING_CREATE_ACTION_SLOT),
+    32
+  );
+
+  await writeStringToStorage(contractAddress, authoritySlot, authorityId);
+  await writeStringToStorage(contractAddress, schemaSlot, schemaId);
+  await setStorageAt(
+    contractAddress,
+    actionSlot,
+    ethers.utils.hexZeroPad(ethers.utils.hexlify(action), 32)
+  );
+}
+
+async function setSchemaIssuer(
+  contractAddress: string,
+  schemaId: string,
+  issuerId: string
+): Promise<void> {
+  const slot = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(["string", "uint256"], [schemaId, SCHEMA_ISSUER_MAPPING_SLOT])
+  );
+  await writeStringToStorage(contractAddress, slot, issuerId);
+}
+
 describe("createStatement permissions", function () {
   let registry: any;
 
@@ -105,6 +148,8 @@ describe("createStatement permissions", function () {
       actor: "did:ega",
       actionAttempted: "Authorization",
       existingAction: ACTION_AUTHORIZATION,
+      schemaId: "schema:any",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-0",
     },
     {
@@ -112,6 +157,8 @@ describe("createStatement permissions", function () {
       actor: "did:ega",
       actionAttempted: "Delegation",
       existingAction: ACTION_DELEGATION,
+      schemaId: "schema:any",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-0",
     },
     {
@@ -119,6 +166,8 @@ describe("createStatement permissions", function () {
       actor: "did:ega",
       actionAttempted: "Issuance",
       existingAction: ACTION_ISSUANCE,
+      schemaId: "schema:any",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-0",
     },
     {
@@ -126,6 +175,8 @@ describe("createStatement permissions", function () {
       actor: "did:issuer",
       actionAttempted: "Authorization",
       existingAction: ACTION_AUTHORIZATION,
+      schemaId: "schema:own",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-0",
     },
     {
@@ -133,6 +184,8 @@ describe("createStatement permissions", function () {
       actor: "did:issuer",
       actionAttempted: "Delegation",
       existingAction: ACTION_DELEGATION,
+      schemaId: "schema:own",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-0",
     },
     {
@@ -140,6 +193,8 @@ describe("createStatement permissions", function () {
       actor: "did:issuer",
       actionAttempted: "Issuance",
       existingAction: ACTION_ISSUANCE,
+      schemaId: "schema:own",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-0",
     },
     {
@@ -147,6 +202,8 @@ describe("createStatement permissions", function () {
       actor: "did:issuer",
       actionAttempted: "Authorization",
       existingAction: ACTION_AUTHORIZATION,
+      schemaId: "schema:foreign",
+      schemaIssuer: "did:other",
       expectedStatusCode: "TRQP-300",
     },
     {
@@ -154,6 +211,8 @@ describe("createStatement permissions", function () {
       actor: "did:issuer",
       actionAttempted: "Delegation",
       existingAction: ACTION_DELEGATION,
+      schemaId: "schema:foreign",
+      schemaIssuer: "did:other",
       expectedStatusCode: "TRQP-300",
     },
     {
@@ -161,6 +220,8 @@ describe("createStatement permissions", function () {
       actor: "did:issuer",
       actionAttempted: "Issuance",
       existingAction: ACTION_ISSUANCE,
+      schemaId: "schema:foreign",
+      schemaIssuer: "did:other",
       expectedStatusCode: "TRQP-300",
     },
     {
@@ -168,6 +229,8 @@ describe("createStatement permissions", function () {
       actor: "did:authorized",
       actionAttempted: "Delegation",
       existingAction: ACTION_AUTHORIZATION,
+      schemaId: "schema:authz",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-0",
     },
     {
@@ -175,6 +238,8 @@ describe("createStatement permissions", function () {
       actor: "did:authorized",
       actionAttempted: "Issuance",
       existingAction: ACTION_AUTHORIZATION,
+      schemaId: "schema:authz",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-0",
     },
     {
@@ -182,6 +247,8 @@ describe("createStatement permissions", function () {
       actor: "did:authorized",
       actionAttempted: "Authorization",
       existingAction: ACTION_AUTHORIZATION,
+      schemaId: "schema:authz",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-300",
     },
     {
@@ -189,6 +256,8 @@ describe("createStatement permissions", function () {
       actor: "did:delegated",
       actionAttempted: "Issuance",
       existingAction: ACTION_DELEGATION,
+      schemaId: "schema:deleg",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-0",
     },
     {
@@ -196,6 +265,8 @@ describe("createStatement permissions", function () {
       actor: "did:delegated",
       actionAttempted: "Authorization",
       existingAction: ACTION_DELEGATION,
+      schemaId: "schema:deleg",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-300",
     },
     {
@@ -203,6 +274,8 @@ describe("createStatement permissions", function () {
       actor: "did:delegated",
       actionAttempted: "Delegation",
       existingAction: ACTION_DELEGATION,
+      schemaId: "schema:deleg",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-300",
     },
     {
@@ -210,6 +283,8 @@ describe("createStatement permissions", function () {
       actor: "did:issuer-role",
       actionAttempted: "Authorization",
       existingAction: ACTION_ISSUANCE,
+      schemaId: "schema:issue",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-300",
     },
     {
@@ -217,6 +292,8 @@ describe("createStatement permissions", function () {
       actor: "did:issuer-role",
       actionAttempted: "Delegation",
       existingAction: ACTION_ISSUANCE,
+      schemaId: "schema:issue",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-300",
     },
     {
@@ -224,6 +301,8 @@ describe("createStatement permissions", function () {
       actor: "did:issuer-role",
       actionAttempted: "Issuance",
       existingAction: ACTION_ISSUANCE,
+      schemaId: "schema:issue",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-300",
     },
     {
@@ -231,6 +310,8 @@ describe("createStatement permissions", function () {
       actor: "did:unrelated",
       actionAttempted: "Authorization",
       existingAction: ACTION_AUTHORIZATION,
+      schemaId: "schema:any",
+      schemaIssuer: "did:issuer",
       expectedStatusCode: "TRQP-300",
     },
   ];
@@ -239,6 +320,15 @@ describe("createStatement permissions", function () {
     it(testCase.name, async function () {
       const statementId = `did:stmt:${testCase.actor}:${testCase.actionAttempted}`;
       await seedStatement(registry.address, statementId, testCase.actor, testCase.existingAction);
+      await setSchemaIssuer(registry.address, testCase.schemaId, testCase.schemaIssuer);
+
+      let action = ACTION_AUTHORIZATION;
+      if (testCase.actionAttempted === "Delegation") {
+        action = ACTION_DELEGATION;
+      } else if (testCase.actionAttempted === "Issuance") {
+        action = ACTION_ISSUANCE;
+      }
+      await setPendingCreate(registry.address, testCase.actor, testCase.schemaId, action);
 
       const result = await registry.callStatic.createStatement();
       expect(result.statusCode).to.equal(testCase.expectedStatusCode);
