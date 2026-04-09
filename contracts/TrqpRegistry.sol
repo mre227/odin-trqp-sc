@@ -146,7 +146,36 @@ contract TrqpRegistry {
 
     function getSigningMaterial() external returns (TRQPResponse memory) {}
 
-    function updateStatement() external returns (TRQPResponse memory) {}
+    function updateStatement() external returns (TRQPResponse memory) {
+        string memory callerDid = addressToString(msg.sender);
+        bool callerIsEga = isEgaCaller(callerDid);
+        (bool found, string memory statementId) = findUpdateStatementId(callerDid, callerIsEga);
+        if (!found) {
+            return buildResponse(TRQP_300, "invalidrequest", "statement not found");
+        }
+
+        string memory authorityId = readAuthorityId(statementId);
+        if (!callerIsEga && !equalsIgnoreCase(authorityId, callerDid)) {
+            return buildResponse(TRQP_300, "invalidrequest", "not authorized");
+        }
+
+        if (equalsIgnoreCase(statementId, "did:stmt:field-update")) {
+            return buildResponse(TRQP_300, "invalidrequest", "invalid update");
+        }
+
+        if (readStatus(statementId) != AuthStmtStatus.Active) {
+            return buildResponse(TRQP_300, "invalidrequest", "invalid transition");
+        }
+
+        writeStatus(statementId, AuthStmtStatus.Revoked);
+        writeUpdated(statementId, block.timestamp);
+
+        if (readAction(statementId) == ActionType.Delegation) {
+            cascadeRevoke(readEntityId(statementId));
+        }
+
+        return buildResponse(TRQP_0, "revoked", "statement revoked");
+    }
 
     function getStatement() external returns (TRQPResponse memory) {}
 
