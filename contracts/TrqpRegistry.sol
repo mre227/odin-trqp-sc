@@ -95,7 +95,47 @@ contract TrqpRegistry {
         });
     }
 
-    function finishBootstrap() external returns (TrqpResponse memory) {}
+    function finishBootstrap(string calldata ecosystemId) external returns (TrqpResponse memory) {
+        SigningRequestEntry memory emptySR;
+        DidAuthChallenge memory emptyDidAuth;
+        emptyDidAuth.signingRequest = emptySR;
+
+        // create boot key
+        string memory bootKey = string(abi.encodePacked("bootstrap|", ecosystemId));
+
+        // check bootstrap record exists
+        if (!bootstrapRecords[bootKey].exists) {
+            return TrqpResponse({
+                statusCode: TRQP_NOT_FOUND,
+                status: "notfound",
+                description: "bootstrap record not found",
+                statements: new AuthorityStatement[](0),
+                operationResultJson: "",
+                didAuth: emptyDidAuth,
+                signingRequestJson: ""
+            });
+        }
+
+        BootstrapRecord memory rec = bootstrapRecords[bootKey];
+
+        // set three statements to Active
+        statements[rec.ecosystemStatementId].status = AuthStmtStatus.Active;
+        statements[rec.egaStatementId].status = AuthStmtStatus.Active;
+        statements[rec.trustRegistryStatementId].status = AuthStmtStatus.Active;
+
+        // delete bootstrap record
+        delete bootstrapRecords[bootKey];
+
+        return TrqpResponse({
+            statusCode: TRQP_OK,
+            status: "completed",
+            description: "bootstrap completed",
+            statements: new AuthorityStatement[](0),
+            operationResultJson: "",
+            didAuth: emptyDidAuth,
+            signingRequestJson: ""
+        });
+    }
 
     function migrateEcosystem() external returns (TrqpResponse memory) {}
 

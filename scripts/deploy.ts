@@ -1,5 +1,5 @@
 // this script deploys the TrqpRegistry smart contract and prints its address
-const { ethers } = require("hardhat");
+import { ethers } from "hardhat";
 
 async function main() {
   const TrqpRegistry = await ethers.getContractFactory("TrqpRegistry");
