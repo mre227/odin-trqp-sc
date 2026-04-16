@@ -374,7 +374,104 @@ contract TrqpRegistry {
         return true;
     }
 
-    function evaluateStatement() external returns (TRQPResponse memory) {}
+    function evaluateStatement(
+        string calldata action,
+        string calldata authorityDid,
+        string calldata entityDid,
+        string[] calldata resources
+    ) external view returns (TRQPResponse memory) {
+        // validate entityDid
+        if (bytes(entityDid).length == 0) {return buildResponse(TRQP_300, "invalidrequest", "entityId is required");}
+
+        // validate action
+        if (!isSupportedEvaluateAction(action)) {return buildResponse(TRQP_300, "invalidrequest", "unsupported action");}
+
+        // validate resources for schema-scoped actions
+        bool requiresResources = isSchemaScopedAction(action);
+        if (requiresResources && resources.length == 0) {return buildResponse(TRQP_300, "invalidrequest", "resources must contain at least one schemaId");}
+
+        // get action success code and status text
+        (string memory successCode, string memory successStatus) = getActionMetadata(action);
+
+        // search for matching Active statements
+        string[] memory candidates = knownStatementIds();
+        AuthorityStatement[] memory matched = new AuthorityStatement[](candidates.length);
+        uint256 count = 0;
+
+        for (uint256 i = 0; i < candidates.length; i++) {
+            if (!statementExists(candidates[i])) continue;
+
+            AuthorityStatement memory stmt = loadStatement(candidates[i]);
+
+            // must match entityDid
+            if (!equalsIgnoreCase(stmt.entityId, entityDid)) continue;
+
+            if (!equalsIgnoreCase(actionNameFromUint(uint256(stmt.action)), action)) continue;
+
+            // must be Active
+            if (stmt.status != AuthStmtStatus.Active) continue;
+
+            // expiration check (block.timestamp vs expiresAt)
+            if (stmt.expires != 0 && block.timestamp > stmt.expires) continue;
+
+            if (bytes(authorityDid).length > 0 && !equalsIgnoreCase(stmt.authorityId, authorityDid)) continue;
+
+            if (requiresResources && !resourcesContainAll(stmt.resources, resources)) continue;
+
+            if (!isValidStatementShape(stmt)) continue;
+
+            matched[count] = stmt;
+            count++;
+        }
+
+        if (count == 0) {return buildResponse(TRQP_200, "notfound", "no matching authority statements found");}
+
+        AuthorityStatementResponse[] memory out = new AuthorityStatementResponse[](count);
+        for (uint256 i = 0; i < count; i++) {
+            out[i] = toResponseStatement(matched[i]);
+        }
+
+        return buildStatementsResponse(successCode, successStatus, "statements found", out);
+    }
+
+    function isSupportedEvaluateAction(string memory action) internal pure returns (bool) {
+        return (
+            keccak256(bytes(action)) == keccak256(bytes("Authorization")) ||
+            keccak256(bytes(action)) == keccak256(bytes("Delegation")) ||
+            keccak256(bytes(action)) == keccak256(bytes("Issue")) ||
+            keccak256(bytes(action)) == keccak256(bytes("Ecosystem")) ||
+            keccak256(bytes(action)) == keccak256(bytes("EcosystemGovernanceAuthority")) ||
+            keccak256(bytes(action)) == keccak256(bytes("TrustRegistry"))
+        );
+    }
+
+    function isSchemaScopedAction(string memory action) internal pure returns (bool) {
+        return (
+            keccak256(bytes(action)) == keccak256(bytes("Authorization")) ||
+            keccak256(bytes(action)) == keccak256(bytes("Delegation")) ||
+            keccak256(bytes(action)) == keccak256(bytes("Issue"))
+        );
+    }
+
+    function getActionMetadata(string memory action) internal pure returns (string memory code, string memory status) {
+        if (keccak256(bytes(action)) == keccak256(bytes("Authorization"))) return (AS_1, "authorized");
+        if (keccak256(bytes(action)) == keccak256(bytes("Delegation"))) return (DS_1, "delegated");
+        if (keccak256(bytes(action)) == keccak256(bytes("Issue"))) return (IS_1, "issuer");
+        if (keccak256(bytes(action)) == keccak256(bytes("Ecosystem"))) return (EC_1, "ecosystem");
+        if (keccak256(bytes(action)) == keccak256(bytes("EcosystemGovernanceAuthority"))) return (EGA_1, "ega");
+        if (keccak256(bytes(action)) == keccak256(bytes("TrustRegistry"))) return (TR_1, "trustregistry");
+        return (TRQP_300, "invalidrequest");
+    }
+
+    function actionNameFromUint(uint256 action) internal pure returns (string memory) {
+        if (action == 0) return "Authorization";
+        if (action == 1) return "Delegation";
+        if (action == 2) return "Issue";
+        if (action == 3) return "Ecosystem";
+        if (action == 4) return "EcosystemGovernanceAuthority";
+        if (action == 5) return "TrustRegistry";
+        return "";
+    }
 
     function buildResponse(
         string memory code,
